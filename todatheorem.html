@@ -1,0 +1,675 @@
+# Proving Toda's Theorem: \(\text{PH} \subseteq \text{P}^\text{#P}\)
+
+The purpose of this post is to describe an odd complexity class, \(\oplus \text{P}\) (pronounced parity-P), which wasn't known to be powerful or even useful until the discovery of Toda's theorem (which I'm going to prove). Toda's theorem claims that the computational power of the polynomial hierarchy (the set of all problems that can be solved in polynomial time, irrespective of other resources) is completely equal to the ability to count polynomially long things. This is a cool result because it highlights the intricate value of being able to count things - the ability to count allows you to also solve any problem in the polynomial hierarchy.
+
+I'm going to start by defining \(\text{NP}, \text{BPP}\), and \(\oplus \text{P}\) in terms of computational paths. Specifically, a language \(L\) is in:
+
+1) \(\text{NP}\) iff there is such a polynomial-time nondeterministic Turing Machine \(M\) for which \(𝒙 ∈ 𝑳\) implies that at least one of the computation paths accepts, and \(𝒙 ∉ 𝑳\) implies that no computation paths accept.
+
+2) \(\text{BPP}\) iff there is such a polynomial-time nondeterministic Turing Machine \(M\) for which \(x ∈ L\) implies that at least \(\frac{2}{3}\) of the computation paths accept, and \(𝒙 ∉ 𝑳\) implies that at most \(\frac{1}{3}\) of the computation paths accept.
+
+3) \(\oplus \text{P}\) iff there is such a polynomial-time nondeterministic Turing Machine \(M\) for which \(x ∈ L\) implies that an odd number of the computation paths accept, and \(𝒙 ∉ 𝑳\) implies that an even number of the computation paths accept.
+
+
+Next, I'm going to describe the notion of Turing Machines with Oracles, and the specific classes of problems they solve. For instance, consider the classes \(\text{NP}^A\), \(\text{BPP}^A\), \((\oplus \text{P})^A\). These are the classes obtained by replacing the polynomial-time nondeterministic Turing Machine \(M\) in the definitions above with a polynomial-time nondeterministic oracle Turing Machine \(M\) that is equipped with language \(A\) as its oracle. As usual, if we write \(C\) instead of \(A\) in the exponent, for some complexity class \(C\), we mean that any language \(A ∈ C\) is permitted as the oracle. If \(C\) has a complete language (as \(\text{NP}^A\) and \((\oplus \text{P})^𝑨\) do, for any oracle \(A\)), then by using that language as the oracle we can solve any instance of a problem in \(C\) with a single call to this specific oracle.
+
+Finally, I'm going to describe the polynomial-time hierarchy. Define \(\Delta_0^P := \Sigma_0^P := \Pi_0^P:= \text{P}\), where \(\text{P}\) is the set of problems that can be solved in polynomial time (with respect to the size of the instance of the problem). Then, for all \(i \geq 0\), define:
+
+$$\Delta_{i+1}^P:=\text{P}^{\Sigma_i^P}$$
+$$\Sigma_{i+1}^P:=\text{NP}^{\Sigma_i^P}$$
+$$\Pi_{i+1}^P:=\text{coNP}^{\Sigma_i^P}$$
+
+The polynomial-time hierarchy is defined as
+
+$$PH = \bigcup\limits_{i} \{\Delta_i^P, \Sigma_i^P, \Pi_i^P\}$$
+
+The result that I want to show here is that every language in the polynomial hierarchy can be solved by Turing Machines of the counting complexity class \(\text{P}^{\#\text{P}}\) (pronounced P sharp-P), which really illuminates the significance of counting as a fundamental computational resource.
+
+
+
+## **Lemma 1: Generalization of the Valiant-Vazirani Theorem to show that \(\text{NP}^A \subseteq \text{BPP}^{(\bigoplus P^A)}\) for any oracle \(A\).**
+
+The generalized Valiant-Vazirani theorem states that for any \(n\), there is a randomized procedure that runs in \(poly(n)\) time and outputs a \(poly(n)\)-size circuit \(C\) such that for each subset \(T\subseteq\{0,1\}^n\) if \(|T|>0\), then 
+
+$$\Pr[|\{x:x\in T \text{ and }C(x) = 1\}|=1] \geq \frac{1}{8n}$$ 
+
+This lemma seeks to show that the generalized Valiant-Vazirani theorem implies that for every oracle \(A\), that \(\text{NP}^A \subseteq \text{BPP}^{(\bigoplus P^A)}\).
+
+Let \(𝐿\) be an arbitrary language in \(\text{NP}^A\) that is decided by a nondeterministic oracle turing machine \(M\) that runs in polynomial time. Then, given an input \(x\) we can decide whether it is in \(L\) by using a probabilistic turing machine oracle equipped with the polynomial-time nondeterministic Turing Machine oracle \(\oplus P^A\). Let \(P\) be the list of all the computation paths of \(M\) upon input \(x\) such that for all\(𝑝 ∈ 𝑇, p\) ends in an accept state and let the count of the number of accepting computation paths be \(m\). Using lemma 5.1, produce separate circuits \(𝐶_𝑖\) for each computation path \(𝑝_𝑖 ∈ 𝑃\), such that \(𝐶_𝑖(𝑝_𝑖) = 1\). Then, a nondeterministic turing machine oracle \(𝑀_𝑖\) would guess \(x\) such that \(\{𝑥: 𝑥 \in 𝑇 \text{ and } C_i(x) = 1\}_{𝑖=1,...,𝑘}\). Then, \(𝑀_𝑖\) would verify that the guess belongs in the set by using an oracle \(A\) in polynomial time and returns ACCEPT if the verification is successful. Therefore, \(𝑀_i^𝐴 ∈ \oplus \text{P}^𝐴\).
+
+Therefore, using \(𝑀_i^𝐴\) as an oracle, simulate the \(\text{BPP}\) behavior on a probabilistic turing machine by calling
+\(\text{M}_i^𝐴, ∀𝑖, 1 ≤ 𝑖 ≤ 𝑘\) and counting the number of ACCEPTS returned from the oracle:
+
+If the number of ACCEPTS is odd, then the probabilistic TM returns ACCEPT.
+
+If number of ACCEPTS is even, then the probabilistic TM returns REJECT.
+
+
+To show that this procedure maps “yes” to “yes”:
+
+Note that if \(𝑥 ∈ 𝐿 ∈ \text{NP}^𝐴\), then:
+    $$𝑃(|\{𝑥:𝑥∈𝑇 \text{ and }C_i(x)=1\}_𝑖|=1) ≥ \frac{1}{8𝑚}$$
+  
+Therefore, for \(k\) circuits, the probability of all of them deciding incorrectly becomes:
+
+        $$\leq \bigg(1-\frac{1}{8m}\bigg)^k \approx 1 - \frac{k}{8m} \quad \text{(by taylor expansion)}$$
+
+
+For this to be in \(\text{BPP}\), the probability of incorrectly deciding a string in \(L\) should be atmost \(\frac{1}{3}\).
+  
+Therefore, we can choose the number of circuits, \(k\), that the \(\text{BPP}\) would have to make to satisfy this property.
+
+$$1−\frac{𝑘}{8m} ≤ \frac{1}{3} \Rightarrow \frac{2}{3} \leq \frac{k}{8m} \Rightarrow k ≥ \frac{16}{3} m$$
+
+If \(𝑘 ≥ \frac{16}{3} 𝑚\), the probability of incorrectly deciding it is atmost \(\frac{1}{3}\). So, the probability of correctly deciding it is atleast \(\frac{2}{3}\).
+Therefore, “yes” maps to “yes”.
+
+
+To show that this procedure maps “no” to “no”:
+
+  If \(𝑥 ∉ 𝐿\), then the number of accepting configurations in \(\oplus \text{P}^A\) will be \(0\) which is even.
+  Therefore, the probabilistic turing machine will return a REJECT.
+  So, “no” maps to “no”.
+
+Therefore, we now have that for all \(A\):
+$$\text{NP}^A ⊆ \text{BPP}^{(⨁ \text{P}^𝐴)}$$
+
+ QED.
+
+
+
+
+
+
+
+## ** Lemma 2: For any oracle A, \(\text{NP}^A \subseteq \text{BPP}^A \Rightarrow \text{NP}^{\text{NP}^{\text{NP}^{(...^{\text{NP}^A})}}} \subseteq \text{BPP}^A\)** 
+** <u>Sub-Lemma 2.1: \(\text{NP}^{\text{BPP}} \subseteq \text{BPP}^{\text{NP}}\)</u>** ial-time nondeterministic turing machine \(M\) and queries oracle \(\text{A} ∈ \text{BP}\), we can decide a string of the language using a \(\text{BPP}\) probabilistic turing machine \(M’\) that queries oracle \(\text{B} ∈ \text{NP}\).
+
+Given an input \(x\), there are \(2^{|𝑥|^{𝑂(1)}} = 2^{|𝑥|^𝑘}\) possible computation paths that are generated by \(M\).
+Therefore, let the \(\text{BPP}\) machine \(M’\) query its \(\text{NP}\) turing machine oracle \(2^{|𝑥|^𝑘}\) times (one time for each computation path). On each query let \(M’\) build up an array of size \(|x|\) of “true” or “false” for each path such that if the oracle returns “true” for every bit, then \(M\) returns “true”.
+
+Then, through repeated error reduction, we can reduce the error of the \(\text{BPP}\) machine to atmost \(\frac{1}{3|x|^k} \times \frac{1}{2^{|x|^k}}\)
+
+Therefore, upon the \(2^{|𝑥|^𝑘}\) computational paths that a nondeterministic turing machine would take, where the number of queries to the oracle are atmost \(|𝑥|^𝑘\), we have that the probability of incorrectly deciding the string becomes:
+$$≤ \frac{1}{3|x|^k \times 2^{|x|^k}} \times (2^{|𝑥|^𝑘} \times |𝑥|^𝑘) = \frac{1}{3}$$
+
+It follows then that the probability of correctly deciding the string is atleast \(\frac{2}{3}\). Since this is simulated on a \(\text{BPP}\) machine with a turing machine oracle in \(\text{NP}\), we have that
+
+$$\text{L} ∈ \text{BPP}^{\text{NP}}$$
+
+Therefore, we conclude that:
+
+$$\text{NP}^{\text{BPP}} ⊆ \text{BPP}^{\text{NP}}$$
+
+QED.
+
+
+** <u>Sub-Lemma 2.2: \(\text{BPP}^{\text{BPP}} \subseteq \text{BPP}\)</u>** listic turing machine \(M\) and queries oracle \(𝐴 ∈ \text{BPP}\), we can decide a stringof the language by using a \(\text{BPP}\) probabilistic turing machine \(M'\), and we can use error reduction to show that \(𝐿 ∈ \text{BPP}\) by simulating the oracle, where the probability of errors for \(M'\) is \(𝑒_2\) and the probability of errors for \(M\) is \(𝑒_1\).
+
+Given an input \(x\), query the oracle atleast once on each bit of \(x\). Therefore, the total number of queries would be \(|𝑥|^𝑘\). Hence, the probability of getting an error on a single query is \(𝑒_1\) whereas the probability
+of getting an error in the entire simulation would be \(|𝑥|^𝑘 𝑒_1\). Then, adding in the probability of getting an error in \(M\), we have that the probability of error is: \(|𝑥|^𝑘 𝑒_1 + 𝑒_2\).
+
+Through repeated error reduction, we can reduce the values of \(𝑒_1\) and \(𝑒_2\) from \(\frac{1}{3}\). However, to show that \(𝑥 ∈ \text{BPP}\), we would need:
+
+$$|𝑥|^𝑘 𝑒_1 + 𝑒_2 ≤ \frac{1}{3}$$
+
+Note that this is satisfied if we do repeated error reduction as many times as needed until:
+
+$$𝑒_1= \frac{1}{6|x|^k},\quad \quad 𝑒_2=\frac{1}{6},$$
+
+since
+
+$$|𝑥|^𝑘 𝑒_1 + 𝑒_2 = \frac{1}{6} + \frac{1}{6} = \frac{1}{3}.$$
+
+If the probability of an error is \(\frac{1}{3}\), then the probability of success will be \(\frac{2}{3}\). Therefore, through simulating the \(\text{BPP}\) oracle on a \(\text{BPP}\) machine \(M\), we have that:
+
+$$\text{BPP}^{\text{BPP}} \subseteq \text{BPP}$$
+
+QED.
+
+Given lemma 1, \((\text{NP}^{\text{BPP}} ⊆ \text{BPP}^{\text{NP}})\) and lemma 2 \((\text{BPP}^{\text{BPP}} ⊆ \text{BPP})\), we can finally use induction to show that:
+
+$$\text{NP}^𝐴 ⊆ \text{BPP}^𝐴 ⇒ \text{NP}^{(\text{NP}^{(\text{NP}^{(...^{(\text{NP}^𝐴)}... )))}}} ⊆ \text{BPP}^𝐴,$$
+
+where we induct on the height, \(i\), of the \(NP\) tower.
+
+
+<u>Base Case</u>: \(i = 1\):
+When \(i = 1\), the formulation becomes \(\text{NP}^𝐴 ⊆ \text{BPP}^𝐴\), which is known to be true.
+
+<u>Assumptive Case</u>: \(i = k\)
+Assume that for height \(k\), 
+$$\text{NP}^{(\text{NP}^{(...^{(\text{NP}^𝐴)))}}} ⊆ \text{BPP}^A$$
+
+<u>Inductive Case</u>: \(i = k + 1\)
+Expanding to the next level, we get:
+
+$$\text{NP}^{\text{NP}^{(\text{NP}(...^{(\text{NP}^𝐴)))}}} ⊆ \text{NP}^{\text{BPP}^𝐴}$$
+
+Applying lemma 1 \((\text{NP}^{\text{BPP}} ⊆ \text{BPP}^{\text{NP}})\) to the RHS yields:
+
+$$\text{NP}^{\text{NP}^{(\text{NP}(...^{(\text{NP}^𝐴)))}}} ⊆ \text{BPP}^{\text{NP}^A}$$
+
+We know that \(\text{NP}^𝐴 ⊆ \text{BPP}^𝐴\). Therefore, the expression becomes:
+
+$$\text{NP}^{\text{NP}^{(\text{NP}(...^{(\text{NP}^𝐴)))}}} \subseteq \text{BPP}^{\text{BPP}^A}$$
+
+Applying lemma 2 \((\text{BPP}^{\text{BPP}} ⊆ \text{BPP})\) to the RHS yields:
+
+$$\text{NP}^{\text{NP}^{(\text{NP}(...^{(\text{NP}^𝐴)))}}} \subseteq \text{BPP}^A$$
+
+Therefore, the inductive stage holds for \(i = k + 1\).
+
+
+<u>Conclusive Step:</u>
+
+ The theorem holds for an \(\text{NP}\) tower of height \(k + 1\) provided that it holds for an \(\text{NP}\) tower of height \(k\).
+However, from our basis step, we showed that the theorem holds for an \(\text{NP}\) tower of height \(1\).
+Therefore, from the inductive hypothesis, the theorem therefore holds true for any \(\text{NP}\) tower of height \(𝑛 ∈ \mathbb{N}\). 
+
+Hence, we have that:
+
+$$\text{NP}^𝐴 ⊆ \text{BPP}^𝐴 \Rightarrow \text{NP}^{\text{NP}^{(\text{NP}(...^{(\text{NP}^𝐴)))}}} ⊆ \text{BPP}^𝐴$$
+
+QED.
+
+
+
+
+
+## ** Lemma 3: \(\text{co}\)-\((\oplus P) \subseteq \oplus P\)** 
+   
+
+Given an arbitrary language \(𝐿 ∈ \text{co}\)-\((\oplus \text{P})\) that is decided by a nondeterministic polynomial-time turing machine \(M(x, y)\) s.t. \(𝑥 ∈ 𝐿\) implies that an even number of computation paths (\(y\) is even) end up on an ACCEPT state and \(𝑥 ∉ 𝐿\) implies that an odd number of computation paths (\(y\) is odd) end up on a REJECT state, we can also decide \(L\) on a \(\oplus \text{P}\) machine \(M'\).
+
+Therefore, we use the following procedure:
+
+\(M’(x)\):
+If \(𝐿 = \{𝑥 | \text{ number of }y's \text{ s. t. }𝑀(𝑥, 𝑦) = 1 \text{ is even}\}\), then construct \((\oplus \text{P})\) machine \(M'\) that runs on \(𝑀'(𝑥, 𝑦)\).
+
+Then, we allow \(M’(𝑥, ty)\) to have an additional computational path than \(M\) by letting it do the following:
+
+The additional computational path simulates \(M\). If \(M\) accepts, then return ACCEPT. Else, REJECT.
+
+The remaining computational paths decides \(x\) nondeterministically.
+It does this by choosing a “yes” or “no” branch at every step of the decision tree.
+In this case, it would only return ACCEPT if all paths reached the “no” leaf. Otherwise, it would REJECT.
+
+
+We see here that \(M'\) has exactly 1 more accepting computation path than \(M\). Since \(M\) had an even number of paths, we have that \(M’\) has an odd number of paths. Therefore, \(𝐿 = \{ 𝑥 | \text{ number of y's s.t. } 𝑀'(𝑥, 𝑦) =
+1 \text{ is odd}\}\). Hence, \(𝐿 ∈ \oplus \text{P}\).
+
+Since \(𝐿 ∈ \oplus \text{P}, 𝐿 ∈ \text{co}\)-\(\oplus \text{P}\), we use the transitivity property to conclude that:
+
+$$\text{co -}\oplus \text{P} ⊆ \oplus \text{P}$$
+
+QED.
+
+
+
+## ** Lemma 4: \((\oplus \text{P})^{\oplus \text{P}} \subseteq \oplus \text{P}\)** 
+Given an arbitrary language \(𝐿 ∈ (\oplus \text{P})^{\oplus \text{P}}\) that is decided by a nondeterministic turing machine \(M\) which queries an oracle \(𝐴 ∈ \oplus\text{P}\), we can show that it is also decided by a nondeterministic turing machine \(M'\) s.t. \(𝐿 = \{x: |\{y: M'(x,y)=1\}| \text{ is odd}\}\).
+
+
+First use the method suggested in the hint, knowing that there exists some nondeterministic guess that produces a correct transcript that concurs with \(M\) on the specified computation path.
+
+Then, we use the following strategy to decide on an input \(x\).
+
+\(M’(x)\):
+Guess a transcript of \(M\) on \(x\). If the transcript is not accurate, then REJECT immediately.
+If the transcript is not an accepting configuration, then return REJECT.
+
+For all accurate queries (as determined by the transcript):
+
+Nondeterministically guess the computation path of a TM \(B\) for \(A\) on each query it is sent. 
+
+If each of these computation paths leads to an accept state in \(B\), then return ACCEPT.
+
+For all inaccurate queries (as determined by the transcript):
+
+Nondeterministically guess the computation path of a TM \(B'\) for \(\bar{A}\)) on each query it is sent.
+
+If each of these computation paths leads to an accept state in \(B'\), then also return ACCEPT.
+
+Therefore, we claim that this nondeterministic polynomial-time turing machine \(M'\) described above can decide \(x\). To prove this, we show that “yes” maps to “yes” and “no” maps to “no”.
+
+To show that “yes” maps to “yes”:
+
+The transcript that was guessed would let \(M'\) guess \(\chi\) accepting computation paths.
+\(\chi\) is the total number of paths that can be taken.
+
+There are an odd number of computation paths for queries that the transcript says are accurate.
+ There are an odd number of computation paths for queries that the transcript says are not accurate. So:
+
+$$𝜒 = (2k + 1)(2\ell + 1) = 4k\ell + 2\ell + 2k + 1 = 2(2k\ell + \ell + k) + 1 ∈ \text{ odd }$$
+
+Therefore, we have that “yes” instances of \(L\) will get mapped to “yes” by \(M'\).
+
+To show that “no” maps to “no”:
+If the instance is “no”, then:
+
+1) The transcript guessed would not be accurate
+2) The transcript guessed would not be an accepting configuration.
+3) The number of computation paths for accurate queries / inaccurate queries are even.
+3)The number of accepting configurations are not even either
+
+The procedure outlined above, however, ensures that \(M'\) REJECTs on all of these possibilities.
+
+Since we have shown that “yes” maps to “yes” and “no” maps to “no”, we conclude the proof of correctness for this procedure, and therefore we have that:
+
+$$L \in \oplus \text{P}$$
+
+Then, by the property of transitivity, we have that:
+
+$$(\oplus \text{P})^{\oplus \text{P}} \subseteq \oplus \text{P}$$
+
+QED.
+
+
+
+
+
+## ** Lemma 5: \(\text{PH} \subseteq \text{BPP}^{\oplus \text{P}}\)** 
+Let \(L\) be an arbitrary language such that \(𝐿 ∈ \text{PH}\), where
+
+$$ \text{PH} = \bigcup\limits_{k \in \mathbb{N}} \Sigma_k^P$$
+
+It follows then that we need to show that \(∀𝑘, Σ_k^𝑃 ⊆ BPP^{\bigoplus \text{P}}\). Therefore,
+
+$$\text{NP}^A ⊆ \text{BPP}^{(\oplus \text{P}^A)} \quad \text{(from Lemma 1)}$$
+
+Let \(A ∈ \oplus \text{P}\). It follows then that since \((\oplus \text{P})^{\oplus \text{P}} ⊆ \oplus \text{P}\) (proven in Lemma 2), we can simply replace \(\oplus \text{P}^A\)
+with some language \(A' ∈ \oplus \text{P}\). Therefore, we have that:
+
+$$\text{NP}^A ⊆ \text{BPP}^{A'}$$
+
+Then, let \(B ∈ \oplus \text{P}\)-complete. It follows then that since \(B\) can be reduced to \(𝐴\), \(A'\) , we can rewrite the above set inclusion as:
+
+$$\text{NP}^B ⊆ \text{BPP}^B$$
+
+Given the above set-inclusion to be true, we also know that:
+
+$$\text{NP}^{\text{NP}^B} \subseteq \text{BPP}^B$$
+$$\text{NP}^{\text{NP}^{\text{NP}^B}} \subseteq \text{BPP}^B$$
+$$\text{NP}^{\text{NP}^{\text{NP}^{\text{NP}^{\text{NP}^{...^{\text{NP}^B}}}}}} \subseteq \text{BPP}^B$$
+
+
+Therefore, we have that for all \(k\) levels in the \(\text{NP}\)-tower:
+
+$$\{\text{NP}^{\text{NP}^{...^{\text{NP}^𝐵}}}\} ⊆ \text{BPP}^B$$
+
+
+However, by definition the LHS (with a height of \(k\)) is equal to \(Σ_k^P\). Therefore, we now have that for all \(k\), we can just construct the \(\text{NP}\)-tower of height \(k\) and it would still be contained in \(\text{BPP}^𝐵\).
+
+$$∀𝑘, Σ_k^𝑃 ∈ \text{BPP}^𝐵$$
+
+$$ \text{PH} = \bigcup\limits_{k \in \mathbb{N}} \Sigma_k^P \in \text{BPP}^B$$
+
+$$\text{PH} \subseteq \text{BPP}^B, \quad B \in \oplus \text{P-complete}$$
+
+This then yields:
+$$\text{PH} ⊆ \text{BPP}^{\oplus \text{P}}$$
+
+QED.
+
+
+
+
+
+## ** Lemma 6: The efficient constrution of a circuit \(C'\) with satisfying assignments of cardinality \(g(|C|)\), where g is a fixed non-negative polynomial and C is a fixed circuit.** t">
+Our aim over the next 3 lemmas is to show that the ability to count is sufficient to capture the entire computational power of the polynomial hierarchy.
+
+So, let \(C\) be Boolean circuit, and let \(g\) be a polynomial with nonnegative integer coefficients. The broad goal of this lemma is to describe a deterministic procedure that, given \(C\), produces a circuit \(C'\) such that
+
+$$|\{𝒚: 𝑪'(𝒚) = 𝟏\}| = 𝒈(|\{𝒙: 𝑪(𝒙) = 𝟏\}|)$$
+
+Additionally, this construction should run in polynomial-time in the size of \(C\) and use space atmost in the size of \(g\), when it is encoded in the natural way as a vector of coefficients.
+
+<u>Sub-Lemma 6.1</u>: Given two circuits \(A\) and \(B\) with \(\alpha\) and \(\beta\) satisfying assignments respectively, we can produce a circuit \(C\) with \(\alpha + \beta\) satisfying assignments:
+
+We first start by examining the result when \(C = A \vee B\).
+
+
+<style>
+.table_center {
+  margin-left: auto;
+  margin-right: auto;
+  width:30%;
+}
+</style>
+
+<table class="table_center">
+  <tr>
+    <th>\(A\)</th>
+    <th>\(B\)</th>
+    <th>\(C\)</th>
+  </tr>
+  <tr>
+    <th>\(0\)</th>
+    <th>\(0\)</th>
+    <th>\(0\)</th>
+  </tr>
+  <tr>
+    <th>\(0\)</th>
+    <th>\(1\)</th>
+    <th>\(1\)</th>
+  </tr>
+  <tr>
+    <th>\(1\)</th>
+    <th>\(0\)</th>
+    <th>\(1\)</th>
+  </tr>
+  <tr>
+    <th>\(1\)</th>
+    <th>\(1\)</th>
+    <th>\(1\)</th>
+  </tr>
+</table>
+
+However, noting that A and B might have inputs of differing dimensions:
+The total number of satisfying assignments when A and B are combined simply using the OR operator is:
+
+$$\#𝑆𝐴𝑇(𝐶) = 𝛼𝛽 + 𝛼(2^{dim(𝐴)} −𝛽) + 𝛽(2^{dim(𝐵)} −𝛼) ≠ 𝛼 + 𝛽$$
+
+On the other hand, when \(𝐶 = 𝐴 ⨁ 𝐵\), where \(dim(𝐴) = dim(𝐵) = 1\):
+
+<table class="table_center">
+  <tr>
+    <th>\(A\)</th>
+    <th>\(B\)</th>
+    <th>\(C\)</th>
+  </tr>
+  <tr>
+    <th>\(0\)</th>
+    <th>\(0\)</th>
+    <th>\(0\)</th>
+  </tr>
+  <tr>
+    <th>\(0\)</th>
+    <th>\(1\)</th>
+    <th>\(1\)</th>
+  </tr>
+  <tr>
+    <th>\(1\)</th>
+    <th>\(0\)</th>
+    <th>\(1\)</th>
+  </tr>
+  <tr>
+    <th>\(1\)</th>
+    <th>\(1\)</th>
+    <th>\(0\)</th>
+  </tr>
+</table>
+
+$$\#𝑆𝐴𝑇(𝐶) = 𝛼 + 𝛽$$
+
+Therefore, we then try the following approach (letting \(dim(𝐴) = 𝑑_𝐴\), \(dim(𝐵) = 𝑑_𝐵\)):
+
+<table class="table_center">
+  <tr>
+    <th>\(d_A\)</th>
+    <th>If the first \(𝑑_𝐴\) bits are true and the last \(𝑑_𝐵\) bits satisfy \(B\), then return true.</th>
+  </tr>
+  <tr>
+    <th>\(d_B\)</th>
+    <th>If the first \(𝑑_𝐴\) bits satisfy \(A\) and the last \(𝑑_𝐵\) bits are true, then return true.</th>
+  </tr>
+</table>
+
+The resultant circuit produces \(α + 𝛽\) satisfying instances in all cases except when \(𝐴\) and \(B\) are both satisfying instances (here the resultant circuit produces \(α + β − 1\) satisfying instances).
+
+Therefore, in this case we can then attempt a workaround by introducing a dummy variable \(𝜓\) that negates both the instances when \(𝐴 = 𝐵 = \text{ True}\).
+
+Therefore, we let:
+
+$$𝐶 = (¬𝜓 ∧ \tilde{A}) ∨ (𝜓 ∧ \tilde{𝐵}),$$
+
+where \(\tilde{𝐴}\) is the circuit that checks satisfiability of the first \(d_A\) assignments to the \(𝐴\) circuit and checks that the remaining bits are all TRUE (by ANDing them), and where \(\tilde{𝐵}\) is the circuit that
+checks that the first \(d_A\) assignments are all TRUE (by ANDing them), and that the remaining \(d_B\) bits are satisfying assignments to the \(𝐵\) circuit.
+
+Therefore, the negated Boolean variable \(𝜓\) in one of the clauses is then able to add the additional count for when \(A\) and \(B\) are true.
+
+QED.
+
+
+<u>Sub-Lemma 6.2</u>: Given two circuits \(A\) and \(B\) with \(𝛼\) and \(𝛽\) satisfying assignments respectively, we can produce a circuit \(C\) with \(\alpha\beta\) satisfying assignments:
+
+We claim that \(C = A \wedge B\). To prove that \(C\) yields \(𝛼𝛽\) satisfying assignments, let \(\tilde{𝐴}\) be the set of satisfying assignments of \(A\), and let \(\tilde{B}\) be the set of satisfying assignments of \(B\). Therefore, the cardinality of the set of tuples \(\tilde{𝐴} × \tilde{𝐵} = |\tilde{A}| × |\tilde{B}|\).
+
+The onus is then to prove that:
+
+1) \(∀𝑥 ∈ \tilde{𝐴} × \tilde{𝐵}, 𝑥\) is a satisfying assignment of \(C\):
+
+If \(∀𝑥 ∈ \tilde{A} × \tilde{𝐵}\), then \(𝑥\) consists of a (satisfying, satisfying) assignment, one from \(\tilde{𝐴}\) and another from \(\tilde{𝐵}\).
+Therefore, \(𝑥\) will clearly satisfy an AND gate which takes as input any possible value of \(x\).
+Hence, \(x\) is a satisfying assignment of \(C\).
+
+2) \(∀𝑥 \text{ s.t. } 𝐶(𝑥)=1, 𝑥∈\tilde{𝐴} × \tilde{𝐵}\):
+
+If \(𝐶(𝑥) = 1\), then \(𝑥 ∈\) (satisfying, satisfying) which implies that it must be in \(\tilde{A}\times\tilde{B}\).
+This is because\(\tilde{𝐴}\) and \(\tilde{𝐵}\) contain all the satisfying assignments for \(A\) and \(B\) respectively.
+Therefore, \(𝑥 ∈ \tilde{𝐴} × \tilde{𝐵}\).
+
+Therefore, \(𝐶 = 𝐴 ∧ 𝐵\) will have \(𝛼𝛽\) satisfying assignments where \(A\) has \(𝛼\) satisfying assignments and \(B\) has \(𝛽\) satisfying assignments.
+
+QED.
+
+
+
+<u>Sub-Lemma 6.3</u>: We can construct a circuit C with 𝑡 satisfying assignments:
+We create a circuit \(𝑇\) that has \(𝑡_i\) satisfying assignments by noting that we can just return TRUE if the bit-value \(< t_i\). The minimum number of bits necessary here would be equivalent to the minimum number of bits necessary to represent \(𝑡_𝑖\) which would be \(log(𝑡_𝑖)\).
+
+
+Therefore, to now prove the main lemma, given a circuit \(C\) with \(𝑐\) satisfying assignments and a positive-coefficient polynomial \(𝑔:\mathbb{N} \rightarrow\mathbb{N}\), we can construct a deterministic procedure that simply produces a circuit \(C'\) with \(𝑔(𝑐)\) satisfying assignments. The polynomial \(g\) is:
+
+$$ g(x) = \sum\limits_{i=0} t_i x^i$$ 
+
+To evaluate the circuit and the lemmas on this polynomial (the wording here is intentional), we need to start by finding \(𝑥_𝑖\), then using that to find \(t_i x^i\) and then adding that \(∀i's\):
+
+For each \(i\), we can create a circuit \(𝐶_{𝑖_1}\) with \(𝑐^i\) assignments by AND’ing the existing circuit to \(C\) \(i\) times (using lemma 6.2).
+
+We then create a circuit \(𝑇\) that has \(𝑡\) satisfying assignments by using lemma 6.3. 
+
+Then, by lemma 6.2, we have that the \(i\)’th term in the polynomial would be represented by a circuit \(𝐶_{i_2} = 𝐶_{i_1} \text{ AND } 𝑇_i\).
+
+Finally, we perform lemma 6.1 on \(C_{i_2}, \forall i\) to produce \(𝐶'\) with \(Σ_{i=0}^{deg(𝑔)}[\#\text{SAT}(𝐶_{𝑖_2})] = 𝑔(𝑐)\) satisfying assignments.
+
+Then, return \(𝐶'\).
+
+
+Finally, the onus of the proof is to show that the run-time of the procedure is in the size of \(C\) and \(g\):
+
+Everytime lemmas 6.1, 6.2, and 6.3 are applied, an \(𝑂(|𝐶|)\), \(𝑂(1)\) and \(𝑂(\log t_i)\) number of gates are added (each of which can be added in \(𝑂(1)\) time) respectively. Therefore, the total number of gates that would need to be added throughout the entire procedure would be atmost:
+
+$$𝑇(𝑔, 𝐶) ≤ 𝑂(|𝐶|)(\text{deg}(𝑔) + 𝑂(1)) \text{deg}(𝑔) + \max\limits_i 𝑂(\log t_i)$$
+
+$$𝑇(𝑔, 𝐶) ≤ 𝑂(|𝐶|)\text{deg}(𝑔) + 𝑂(|𝐶|) + \max\limits_i 𝑂(\log t_i) = \text{poly}(|C|, g) 𝑖$$
+
+Therefore, the runtime of this procedure is in the size of \(C\), and takes space atmost \(g\). Hence, we now have a procedure that produces a circuit \(C'\) given \(C\) such that:
+
+$$|{𝑦: 𝐶'(𝑦) = 1}| = 𝑔(|{𝑥: 𝐶(𝑥) = 1}|)$$
+
+QED.
+
+
+
+
+
+
+## ** Lemma 7: Constructing an efficiently computable non-negative polynomial \(g(t)\) for which \(t\equiv k\mod 2 \Rightarrow g(t) \equiv k \mod 2^m\), where \(m\) is a power of 2.** ass="content"
+
+
+The purpose of this lemma is to create a deterministic procedure that, given \(m\) a power of two, outputs (as a sequence of coefficients) a polynomial \(𝒈: \mathbb{Z} → \mathbb{Z}\) with nonnegative integer coefficients for which
+$$t \equiv 0 \mod 2 \Rightarrow g(t) \equiv 0 \mod 2^m$$
+$$t \equiv 1 \mod 2 \Rightarrow g(t) \equiv 1 \mod 2^m$$
+and that runs in time \(poly(m)\).
+
+<u>Sub-Lemma 7.1</u>: \(t\equiv 0\mod 2^{2^i} \Rightarrow g_0(t) \equiv 0 \mod 2^{2^{i+1}}\), where \(g_0(t)=3t^2 - 2t^3\):
+
+Given that \(𝑔_0(t) = 3t^2 − 2t^3 = t^2(3 − 2t)\) and that \(t \equiv 0 \mod 2^{2^i}\), we let \(t = k\cdot 2^{2^i}, k \in \mathbb{N}\). It follows then that:
+$$g_0(t) = t^2(3 − 2t) = 𝑘^2 (2^{2^i})^2 (3−2(𝑘\cdot 2^{2^𝑖}))$$
+$$= 3k^2 \cdot 2^{2^{𝑖+1}} − 2k^3 \cdot 2^{2×2^{i+1}}$$
+$$=3k^2 \cdot 2^{2^{𝑖+1}} −8k^3 \cdot 2^{2^{i+1}}$$
+$$= (\alpha + \beta) \cdot 2^{2^{i+!}}$$
+$$= \gamma \cdot 2^{2^{i+1}}$$
+
+Then, since \(𝛼 ∈ \mathbb{N}, 𝛽 ∈ \mathbb{N}\), it follows that \(\gamma ∈ \mathbb{N}\). Therefore,
+$$\gamma \cdot 2^{2^{i+1}} \equiv 0 \mod 2^{2^{i+1}}$$
+QED.
+
+
+
+
+<u>Sub-Lemma 7.2</u>: \(t\equiv 1 \mod 2^{2^i} \Rightarrow g_0(t) \equiv 1 \mod 2^{2^{i+1}}\), where \(g_0(t) = 3t^2 - 2t^3\):
+
+Given that \(g_0(t) = 3t^2 − 2t^3 = t^2(3 − 2t)\) and that \(t \equiv 1 \mod 2^{2^i}\), we let \(t=k\cdot 2^{2^i}+1\), for \(k \in \mathbb{N}\). It follows then that
+
+$$g_0(t) = t^2(3 − 2t)$$
+
+$$=(1+k^2\cdot 2^{2^{𝑖+1}} + k\cdot 2^{2^{i+1}})(3 - 2 - k\cdot 2^{1+2^i})$$
+
+$$ = 1 + 2^{2^{1+i}}k^2 − 2^{2+2^{1+i}}k^2 − 2^{1+2^i+2^{1+i}}k^3$$
+
+$$= 1 + 2^{2^{1+i}}(−3𝑘^2) − (1 + 2^i)k^3 2^{2^{1+i}}$$
+
+$$= 1 + 2^{1+2^i}(-(2^i+1)k^3 - 3k^2)$$
+
+Then, since \(𝑘, 𝑖 ∈ \mathbb{N}\), it follows that:
+
+$$g_0(t)=1+2^{1+2^𝑖}𝛽,\quad 𝛽∈\mathbb{N}$$
+
+Hence,
+$$𝑔_0(t)=1+\beta\cdot 2^{2^{i+1}} \equiv 1 \mod 2^{2^{i+1}}$$
+
+QED.
+
+
+Our goal is now to construct a deterministic procedure that outputs the coefficients of a polynomial \(𝑔: \mathbb{Z} → \mathbb{Z}\) with nonnegative integer coefficients for which:
+
+$$𝑡 \equiv 0 \mod 2 \Rightarrow 𝑔(𝑡) \equiv 0 \mod 2^𝑚$$
+
+$$𝑡 \equiv 1 \mod 2 \Rightarrow 𝑔(𝑡) \equiv 1 \mod 2^𝑚$$
+
+and that runs in \(𝑝𝑜𝑙𝑦(𝑚)\) where \(m\) is a power of \(2\). Therefore, let \(𝑚 = 2^𝑘\), for \(𝑘 ∈ \mathbb{N}\). It follows then that we want to construct a procedure that outputs the coefficients to a polynomial \(g: \mathbb{Z} \rightarrow \mathbb{Z}\) such that
+
+$$𝑡 \equiv 0 \mod 2 \Rightarrow 𝑔(𝑡) ≡ 0 \mod 2^{2^𝑘}$$
+
+$$t ≡ 1 \mod 2 \Rightarrow 𝑔(𝑡) ≡ 1 \mod 2^{2^k}$$
+
+To do so, we recall lemmas 7.1 and 7.2 with \(𝑔_0(t) = 3t^2 − 2t^3\) in that every application of \(𝑔_0\) causes the exponent of the exponent of the mod to increment by 1. Therefore, we claim that the coefficients of \(𝑔_0 ∘ 𝑔_0 ∘ ... ∘ 𝑔_0(𝑡) = 𝑔(𝑡)\) where \(k\) compositions are done.
+
+To prove this, we use mathematical induction on \(k\):
+
+<u>Base Case</u>: \(𝑘 = 1, 𝑚 = 0\)
+
+No compositions would be done, so we would require \(𝑔(𝑡) = 𝑡\). However, when
+
+$$𝑡\equiv 0 \mod 2, g(t) \equiv 0 \mod 2^{2^0} \equiv 0\mod 2 = t$$
+
+$$𝑡\equiv 1 \mod 2, g(t) \equiv 1 \mod 2^{2^0} \equiv 1\mod 2 = t$$
+
+Hence the base case is satisfied.
+
+<u>Assumptive case</u>: We assume that \(g(𝑡) = 𝑔_0 ∘ ... ∘ 𝑔_0 (𝑡)\) for \(𝑘 ≤ 𝑛\) compositions is true.
+
+<u>Inductive case</u>: When \(𝑘 = 𝑛 + 1\), we have that from the \((𝑘 − 1)\)th composition (by the assumptive step), we would have:
+
+$$t\equiv 0 \mod 2 \Rightarrow 𝑔'(t) \equiv 0 \mod 2^{2^{k-1}}$$
+
+$$t\equiv 1 \mod 2 \Rightarrow 𝑔'(t) \equiv 1 \mod 2^{2^{k-1}}$$
+
+Therefore, when we perform the \(k\)’th composition, we would then get:
+
+$$𝑡\equiv 0 \mod 2 \Rightarrow 𝑔(𝑡) \equiv 0\mod 2^{2^k}$$
+
+$$𝑡\equiv 1 \mod 2 \Rightarrow 𝑔(𝑡) \equiv 1\mod 2^{2^k}$$
+
+Therefore, by the inductive hypothesis from the base case, we now have that \(𝑔_0 ∘ 𝑔_0 ∘ ... ∘ 𝑔_0 (𝑡) = 𝑔(𝑡)\) where \(k\) compositions are done. As desired.
+
+
+Finally, the onus of this proof is to show that this procedure runs in polynomial time in \(m\):
+
+To do this, we note that each step of the composition involves atleast \(k\) evaluations through multiplication.
+
+Therefore, the total number of multiplications would across all the steps would be \(O(2^k) = O(m)\). 
+Each multiplication runs in \(𝑝𝑜𝑙𝑦(𝑂(𝑘)) ∈ 𝑝𝑜𝑙𝑦(𝑚)\) time. 
+The total time complexity of this procedure is \(𝑝𝑜𝑙𝑦(𝑚) × 𝑂(𝑚) = 𝑝𝑜𝑙𝑦(𝑚)\).
+
+QED.
+
+
+
+
+
+
+## ** Lemma 8: Concluding that \(\text{PH} \subseteq \text{P}^{\# \text{P}}\)** 
+Recall Lemmas \(1\) and \(2\) which state that
+$$\text{PH} ⊆ \text{BPP}^{\oplus \text{P}} $$
+$$(\oplus \text{P})^{\oplus \text{P}} ⊆ \oplus \text{P} $$
+
+<u>Lemma 8.1</u>: any language in \(\text{BPP}^{\oplus \text{P}}\) can be decided in \(BPP^{\oplus \text{P}}\) with the oracle machine making a single query and then immediately entering \(q_\text{accept}\) or \(q_\text{reject}\).
+
+Let \(𝐿 ∈ \text{BPP}^{\oplus \text{P}}\). Let \(M\) be a probabilistic \(TM\) with oracle \(\text{P}^{\oplus \text{P}}\) that decides a string \(x\) through the following procedure (and only tossing the coins redundantly):
+
+\(M(x)\):
+Toss the \(c = |𝑥|\) coins and write down the results (what is actually done with the results is not relevant right now).
+
+Query the oracle \(\text{P}^{\oplus \text{P}}\) on \(x\).
+
+If the oracle returns ACCEPT, then enter \(𝑞_\text{𝑎𝑐𝑐𝑒𝑝𝑡}\). If the oracle returns REJECT, then enter \(𝑞_\text{𝑟𝑒𝑗𝑒𝑐𝑡}\).
+
+Therefore, we have that \(M\) decides \(L\) in \(\text{BPP}^{\text{P}^{\oplus \text{P}}}\). Recall Lemma 2 which states that \((\oplus \text{P})^{\oplus \text{P}} ⊆ \oplus \text{P}\). Since \(\text{P} ∈ \oplus \text{P}\), we have that \(\text{P}^{\oplus \text{P}} ⊆ \oplus \text{P}\). Therefore, \(M\) decides \(L\) in \(\text{BPP}^{\oplus \text{P}}\).
+
+QED.
+
+
+
+<u>Lemma 8.2</u>: The outcome of the query is determined by the number of satisfying assignments of some circuit \(C\).
+
+For the query made by \(M\) to \(\oplus \text{P}\), we let the turing machine that decides \(\oplus \text{P}\) be denoted as \(M'\). It follows then that \(M'\) has an equivalent circuit \(C\). It follows immediately that the outcome of the query (of form \(q: \{0, 1\}^c \rightarrow \{0, 1\}\) (where \(c\) is the number of coins)) depends on \(C\).
+
+To determine the relationship further, we recall that \(\oplus \text{P}\) returns ACCEPT if the number of computation paths is odd and REJECT if it is even. Therefore, for an oracle query \(q\) to return ACCEPT, the number of satisfying assignments for \(C\) would have to be odd (\(\equiv 1 \mod 2)\), and for it to return REJECT, the number of satisfying assignments for \(C\) would have to be even \((\equiv 0 \mod 2)\).
+
+Hence, we conclude that the outcome of the query is determined by the number of satisfying assignments of some circuit \(C\).
+
+QED.
+
+
+We now use Lemma \(7\) to produce a polynomial \(𝑔: \mathbb{N} → \mathbb{N}\) such that \(𝑡 \equiv 0 \mod 2 \Rightarrow g(t) \equiv 0 \mod 2^m\) and \(𝑡 \equiv 1 \mod 2 \Rightarrow g(t) \equiv 1 \mod 2^m\), where \(m = c\) (the number of coins used by the turing machine \(M\)).
+
+We then use part a (providing circuit \(C\) with \(s\) satisfying assignments as an input) to produce circuit \(C'\) with \(𝑔(𝑠)\) satisfying assignments). Therefore, \(C'\) would have
+
+$$0 \mod 2^c \text{ satisfying assignments if } 𝐶 \text{ had } 0 \mod 2 \text{ satisfying assignments}.$$
+
+$$1 \mod 2^c \text{ satisfying assignments if } 𝐶 \text{ had } 1 \mod 2 \text{ satisfying assignments}.$$
+
+The onus of the proof is to now show that the language can be decided by a deterministic polynomial-time
+turing machine \(Q\) that uses nondeterministic polynomial-time turing machine oracle \(Q'\) that runs in \(\#𝑃\).
+
+From lemma \(8.1\), we have that since the language \(L\) is decided by \(\text{BPP}\), atleast \(\frac{2}{3}\) of the computation paths correctly produce circuit \(C'\) when \(𝑥 ∈ 𝐿\) such that \(C'\) has \(1 \mod 2^c\) satisfying assignments. Similarly, atmost \(\frac{1}{3}\) of the computation paths correctly produce circuit \(C'\) when \(𝑥 ∉ 𝐿\) such that \(C'\) has \(0 \mod 2^c\) satisfying assignments. Therefore, the total number of paths that produce \(C'\) with \(1 \mod 2^c\) satisfying assignments when \(𝑥 ∈ 𝐿\) is \(≥ \frac{2}{3}\cdot 2^c\), whereas the total number of paths that produce \(C'\) with \(0 \mod 2^c\) satisfying assignments when \(𝑥 ∉ 𝐿\) is \(≤ \frac{1}{3} \cdot 2^c\).
+
+Note then that we can use a \(\#𝑃\) oracle to find the total length of the set \(𝑆 = (𝑥 = \{0,1\}^𝑐) × 𝑖\) such that
+\(𝐶'(𝑞(𝑥), i) = 1\) where \(𝑥\) is every possible input of length \(c\) in the set, \(𝑞(𝑥)\) is a result of querying \(x\), and \(i\) is the \(d\)-dimensional input to \(C'\).
+
+Then, a polynomial procedure \(H\) does the following:
+
+Use the method described in the previous paragraph to query an oracle to find the length of the set, |𝑆|.
+Calculate \(𝑘 = |𝑆| \mod 2^c\).
+
+If \(𝑘 ≥ \frac{2}{3} \cdot 2^c\), then return ACCEPT.
+
+If \(𝑘 ≤ \frac{2}{3} \cdot 2^c\), then return REJECT.
+
+There are atleast \(\frac{2}{3}\) accepting paths that we explicitly search for and atmost \(\frac{1}{3}\) rejecting paths that we explicitly search for by using \(\#\text{P}\) which is then verified through the modulo operation by procedure \(H\). Hence, we now have that any for an arbitrary language \(𝐿 ∈ \text{BPP}^{\oplus \text{P}}\), \(𝐿 ∈ \text{P}^{\#\text{P}}\). Therefore, we now have that:
+
+$$\text{BPP}^{\oplus \text{P}} ⊆ \text{P}^{\#\text{P}}$$
+
+However, recall result 1 from the previous set that:
+
+$$\text{PH} ⊆ \text{BPP}^{\oplus \text{P}}$$
+
+Therefore, by the property of transitivity we now have that
+
+$$\text{PH} ⊆ \text{P}^{\#\text{P}}$$
+
+QED.

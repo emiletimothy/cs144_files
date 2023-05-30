@@ -1,0 +1,387 @@
+# Using Martingales to Derive Robust Concentration Inequalities in Probability Theory
+
+$$\DeclareMathOperator*{\EE}{\mathbb{E}}$$
+$$\usepackage{bbm}$$
+
+
+There are many powerful concentration inequalities known in probability theory. A concentration inequality provides bounds on the probability that some random variable takes a value far from its expectations: some known concentration inequalities include Markov's inequality (which is technically not a concentration inequality, but allows the derivation of several true concentration inequalities), Chebyshev's inequality, Laplace's transform, Chernoff's inequality, and Hoeffding's inequality. These results show that the probability of a large deviation has a profile similar to the probability that a normal random variable exhibits a larg deviation: these methods are hallmarks of computational mathematics and statistics, and have numerous applications across algorithms, theoretical computer science, and analysis.
+
+The point of this post is to talk about these concentration inequalities and how we can achieve some spectacular strengthenings for an interesting mathematical structure called a martingale, which I will introduce, talk about, and derive in detail.
+
+First, let me talk about the classical concentration inequalities that need to be strengthened. You might ask, what's the point of writing about this if I'm going to find stronger inequalities anyway? Well, we're trying to find specific things about these classical inequalities to criticize - we certainly can't do that unless we have a powerful understanding of these classical inequalities. Recall the wise words of Sun Tzu: "Keep your friends close, but your enemies closer."
+    
+
+## ** Markov's Inequality**
+
+We start with the most fundamental probabilistic inequality, Markov's inequality. Markov's inequality states that for a positive random variable \(X\) and any positive number \(a\), that:
+
+$$\boxed{\Pr(X\geq a) \leq \frac{\mathbb{E}[X]}{a}}$$
+
+To prove this, we can use the law of total expectations:
+
+$$
+\begin{align*}
+  \mathbb{E}[X] &= \EE[X | X\geq a] \Pr[X\geq a] + \EE[X | X< a] \Pr[X< a] \\
+  &\geq a\Pr[X \geq a]
+\end{align*}
+$$
+
+So, we have that \(\EE[X] \geq a\Pr[X\geq a]\). Dividing both sides by \(a\) yields that \(\Pr[X\geq a] \leq \frac{\EE[X]}{a}\).
+
+
+## ** Chebyshev's Inequality**
+
+We can get our first 'true' concentration inequality that bounds the probability that a random variable \(X\) takes a value far from its expectation, using Chebyshev's inequality. Specifically, for a random variable \(X\) with mean \(\mu\) and standard deviation \(\sigma\) (or variance \(\sigma^2\)), and for any real number \(k\), Chebyshev's inequality states that:
+
+$$\boxed{\Pr(|X-\mu|\geq k) \leq \frac{\sigma^2}{k^2}}$$
+
+To prove this, we can use Markov's inequality:
+
+$$\begin{align*}
+  \Pr(|X-\mu|\geq k) &= \Pr((X-\mu)^2\geq k^2) \\
+  &\leq \frac{\EE[(X-\mu)^2]}{k^2} \\
+  &= \frac{\sigma^2}{k^2}
+\end{align*}$$
+
+For the last equality, we used the fact that \(\EE[(X-\mu)^2] = \sigma^2\). So, we have that \(\Pr(|X-\mu|\geq k) \leq \frac{\sigma^2}{k^2}\).
+
+
+
+## ** Laplace's transform**
+
+Let \(X\) be a real random variable. Then, the moment-generating-function (MGF) of \(X\) is defined as \(m_X(\theta) = \EE[e^{\theta X}]\), and the cumulant-generating-function (CGF) of \(X\) is defined as \(\xi_X(\theta) = \log m_X(\theta) = \log \EE[e^{\theta X}]\). The MGF and CGF have some pretty cool properties (like, for instance, the MGF of a random variable can uniquely determine its distribution) that I'm not going to get into here. The reason I introduce the MGF and CGF though, is to write some 'Markov Inequality' properties using the MGF and CGF in a concentration-inequalitic form.
+
+Specifically, the Laplace transform states that for any \(t\in\mathbb{R}\) that:
+
+$$\boxed{\Pr[X\geq t] \leq \exp(-\sup_{\theta>0} (\theta t - \xi_X(\theta)))}$$
+
+$$\boxed{\Pr[X\leq t] \leq \exp(-\sup_{\theta<0} (\theta t - \xi_X(\theta)))}$$
+
+Let \(\theta>0\). Then, the function \(x\mapsto e^{\theta x}\) is strictly increasing and strictly positive. Therefore, Markov's inequality then tells us that:
+
+$$ \Pr[X\geq t] = \Pr[e^{\theta X} \geq e^{\theta t}] \leq e^{-\theta t}\EE[e^{\theta X}] = e^{-\theta t} m_X(\theta)$$
+
+So, combining the terms on the right-hand-side in the exponent and recognizing the cumulant generating function, we arrive at the bound:
+
+$$ \Pr[X\geq t] \leq \exp(-(\theta t - \xi_X(\theta))) $$
+
+Since the parameter \(\theta>0\) is arbitrary, we can take the infimum of the right-hand side over \(\theta>0\). This leads to the first inequality in the statement. For the second inequality, fix \(\theta<0\) and note that \(x\mapsto e^{\theta x}\) is strictly decreasing and strictly positive. Thus,
+
+$$ \Pr[X\leq t] = \Pr[e^{\theta X} \geq e^{\theta t}]$$
+
+Following the argument in the same fashion yields the remainder of the claim.
+
+
+## ** Chernoff's inequality**
+
+
+For any series of random variables \(X_1, \dots, X_n\) with sample mean \(\overline{X}\) and expectation \(\theta\), Chernoff's inequality states that for any positive \(\epsilon\), that:
+
+$$\boxed{\Pr(\bar{X}>(1+\epsilon)\theta) < \exp(-n\theta((1+\epsilon)\log(1+\epsilon)-\epsilon))}$$
+
+$$\boxed{\Pr(\bar{X}<(1-\epsilon)\theta) < \exp(-\theta n \epsilon^2 / 2)}$$
+
+We'll prove each of these statements below. 
+
+
+For the first statement, we show that for any \(t\) and positive \(\beta\) with \(X\), \(\Pr[X\geq t]\leq \exp(-\sup_{\beta\geq 0}(-\beta t + \log m_{X}(\beta))\). To prove this, note that
+
+$$\begin{align*}
+    \Pr(X\geq t) &= \Pr(e^{\beta X}\geq e^{\beta t}) \quad \text{($e^{X}$ is a monotonically increasing function)} \\
+    &\leq e^{-\beta t}\EE[e^{\beta X}] \quad\text{Markov's inequality} \\
+    &= \exp(-\beta t + \log \EE[e^{\beta X}])
+\end{align*}
+$$
+
+Since this is true for all \(\beta\), we can write that
+
+$$\begin{align*}
+    \Pr(X> t) &< \exp (\inf_{\beta\geq 0} (-\beta t + \log m_X(\beta))) = \exp(-\sup\limits_{\beta\geq 0}(\beta t - \log m_X(\beta))
+\end{align*}$$
+
+
+We then find an expression for \(\log m_{X_i}(\beta)\) where \(m_{X_i}(\beta)\) is the MGF of \(X_i\) evaluated at \(\beta\). For \(X_i\in[0,1]\), note that the secant line of \(e^{\beta X_i}\) upper bounds \(e^{\beta X_i}\). To find the secant line, note that it has endpoints at (0, 1) and \((1, e^{\beta})\), so the equation of the secant line is \(y - 1 = (e^{\beta}-1)x \Rightarrow y = (e^{\beta}-1)x + 1\). So, \(e^{\beta X_i}\leq (e^{\beta}-1)X_i+1\). Then, by the monotonicity of the expectation, we get that \(\EE[e^{\beta X_i}] \leq \EE[(e^{\beta}-1)X_i+1]=1+\EE[(e^{\beta}-1)X_i]\) (by the linearity of expectations). Thus, we have that \(m_{X_i}(\beta)\) \(\leq 1 + \EE[(e^\beta-1)X_i]\). 
+
+Then, by the monotonicity of the logarithm, we get that \(\log m_{X_i}(\beta) \leq \log (1+\EE[(e^\beta-1)X_i]) \leq (e^\beta-1)\EE[X_i]\) since \(\log(1+x)\leq x\) for positive \(x\) and \((e^\beta-1)\EE[X_i] \geq 0\). Therefore, by independence, \(\log\EE[e^{\beta X}]=\log\EE[\prod_{i=1}^n e^{\beta X_i}] = \log \prod_{i=1}^n \)  \(\EE[e^{\theta X_i}]=\sum_{i=1}^n \log \EE[e^{\theta X_i}] \leq (e^\beta-1)\EE[X]\). So, we have that \(\Pr(X\geq t) \leq \exp(-\sup_{\beta\geq 0}(\beta t - (e^\beta-1)\EE[X]))\). \\
+
+Then, our goal is to bound \(\Pr(\bar{X}>(1+\epsilon)\theta)\). Since \(n\theta=\EE[X]\), note that if we set \(t = (1+\epsilon)n\theta\), we get:
+
+$$\begin{align*}
+    \Pr(\bar{X}>(1+\epsilon)\theta) &= \Pr\bigg(\frac{1}{n}\sum_{i=1}^n X_i > (1+\epsilon) \theta\bigg) = \Pr\bigg(\sum_{i=1}^n X_i > (1+\epsilon)n\theta\bigg) \\
+    &< \exp(-\sup\limits_{\beta\geq 0}(\beta(1+\epsilon)n\theta - (e^\beta-1)n\theta)) = \exp (\inf\limits_{\beta\geq 0}(-\beta(1+\epsilon)n\theta + (e^\beta-1)n\theta))
+\end{align*}$$
+
+The infimum of the expression occurs at \(\frac{d}{d\beta}(-\beta(1+\epsilon)n\theta + (e^\beta-1)n\theta) = 0 \Rightarrow -(1+\epsilon)n\theta+e^\beta n\theta = 0 \Rightarrow e^\beta = (1+\epsilon) \Rightarrow \beta = \log(1+\epsilon)\). Thus, if we set \(\beta=\log(1+\epsilon)\), we minimize the RHS of the above expression. So,
+
+$$\begin{align*}
+    \Pr(\bar{X}>(1+\epsilon)\theta) &< \exp (\log(1+\epsilon)(1+\epsilon)n\theta - (e^{\log(1+\epsilon)}-1)n\theta) = \exp(n\theta((1+\epsilon)\log(1+\epsilon) - \epsilon))
+\end{align*}$$
+
+Thus, we have shown that \(\boxed{\Pr(\bar{X}>(1+\epsilon)\theta) < \exp(-n\theta((1+\epsilon)\log(1+\epsilon)-\epsilon))}\)
+
+
+Then, to tackle the second (lower) Chernoff inequality, we do the following:
+
+Similarly, note that for negative $\beta$, the monotonicity of \(e^X\) gives us that \(\Pr(\bar{X}<(1-\epsilon)\theta) = \Pr(e^{\beta X} > e^{n\beta(1-\epsilon)\theta})\). By Markov's inequality, this is atmost \(\exp(-n\theta\beta(1-\epsilon))\EE[e^{\beta X}]\). Using our previous formula for \(\EE[e^{\beta X}]=(e^\beta-1)\theta\), this evaluates to \(\Pr(X<(1-\epsilon)n\theta)< \exp(-n\theta\beta(1-\epsilon)+(e^\beta-1)\theta)\). Since this holds true for any \(\beta\), we can write that:
+$$
+\begin{align*}
+    \Pr(X<(1-\epsilon)n\theta) < \exp(-\inf_{\beta\leq 0} (-\beta(1+\epsilon)n\theta+(e^\beta-1)n\theta))
+\end{align*}
+$$
+By finding the derivative, the above expression is similarly minimized at \(\beta=\log(1-\epsilon)\).  This then yields
+$$
+\begin{align*}
+    \Pr(X<(1-\epsilon)n\theta) < \exp(-n\theta(1-\epsilon)\log(1-\epsilon)-\epsilon\theta n) &= \exp(-n\theta((1-\epsilon)\log(1-\epsilon) + \epsilon)
+\end{align*}
+$$
+
+Thus, the onus of the proof is to show that \(-n\theta((1-\epsilon)\log(1-\epsilon)+\epsilon)\leq -n\theta\epsilon^2/2\) which is the same thing as showing that  \(\forall\epsilon\in[0,1)\),  \(-(1-\epsilon)\log(1-\epsilon)-\epsilon\leq -\epsilon^2/2\). By L'Höpital's rule, the above clearly holds as \(\epsilon \to 0\). For other \(\epsilon \in [0,1)\), we consider \(t=1-\epsilon\). For this, \(\epsilon-\frac{\epsilon^2}{2} = \frac{1-t^2}{2}\). Then, it reduces to showing that \(-t\log t \leq \frac{1-t^2}{2}\) for \(t\in[0,1]\) which is a known truth. Thus, we have that:
+
+$$\begin{align*}
+    \Pr(\bar{X}<(1-\epsilon)\theta) < \exp(-n\theta((1-\epsilon)\log(1-\epsilon)+\epsilon)) \leq \exp(-\theta n\epsilon^2/2)
+\end{align*}
+$$
+
+Thus, we conclude that \(\boxed{\Pr(\bar{X}<(1-\epsilon)\theta) < \exp(-\theta n\epsilon^2/2)}\)
+
+
+## ** Hoeffding's Inequality**
+
+
+Let \(X_1, \dots, X_n\) be independent random variables such that \(a_i\leq X_i\leq b_i\) almost surely. Consider the sum of these random variables: \(S_n = X_1 + \dots + X_n\). Then, Hoeffding's theorem states that, for all \(t>0\),
+
+$$ \boxed{\Pr(S_n - \EE[S_n] \geq t) \leq \exp\left(-\frac{2t^2}{\sum_{i=1}^n (b_i - a_i)^2}\right)}$$
+
+$$\boxed{\Pr(|S_n - \EE[S_n]| \geq t) \leq 2\exp\left(-\frac{2t^2}{\sum_{i=1}^n (b_i - a_i)^2}\right)}$$
+
+To prove this, we use Hoeffding's lemma: let \(X\) be a random variable such that \(X\in[a,b]\) almost surely. Hoeffding's lemma states that:
+
+$$ \EE\left[e^{s(X-\EE[X])}\right] \leq \exp\left(\frac{1}{8}s^2 (b-a)^2\right)$$
+
+So, going back to our original setting: for \(s, t > 0\), we can exponentiate the initial probability function with the map \(x \mapsto e^{sx}\):
+
+$$ \Pr(S_n - \EE[S_n] \geq t) = \Pr(\exp(s(S_n - \EE[S_n])) \geq e^{st})$$
+
+We can bound this probability using Markov's inequality:
+
+$$\Pr(\exp(s(S_n - \EE[S_n])) \geq e^{st}) \leq \frac{\EE[\exp(s(S_n - \EE[S_n]))]}{e^{st}}$$
+
+Since \(X_1, \dots, X_n\) are independent, we can decompose this further to:
+
+$$\frac{\EE[\exp(s(S_n - \EE[S_n]))]}{e^{st}} = e^{-st} \prod_{i=1}^n \EE[\exp(s(X_i - \EE[X_i]))]$$
+
+Since \(X_i\) and \(\EE[X_i]\) take values between \([a_i, b_i]\), we can further bound this inequality by:
+
+$$\frac{\EE[\exp(s(S_n - \EE[S_n]))]}{e^{st}} = e^{-st} \prod_{i=1}^n \exp\left(\frac{s^2(b_i - a_i)^2}{8}\right)$$
+
+Simplifying this, we get:
+
+$$ \Pr(S_n - \EE[S_n] \geq t) \leq \exp\left(-st + \frac{s^2}{8}\sum_{i=1}^n (b_i - a_i)^2\right)$$
+
+Setting \(s = 4t/\sum_{i=1}^n (b_i -a_i)^2\) gives us the first equation.
+
+For the second result, note that:
+
+$$\Pr(|S_n - \EE[S_n]| \geq t) = \Pr(S_n - \EE[S_n] \geq t) + \Pr(S_n-\EE[S_n] \leq -t)$$
+
+Using the first result twice (setting the RHS to \(t\) and \(-t\) respectively) gives us that:
+
+$$\Pr(|S_n - \EE[S_n]| \geq t) \leq 2\exp\left(-\frac{2t^2}{\sum_{i=1}^n (b_i - a_i)^2}\right)$$
+
+Now that I've described these concentration inequalities, I'm going to start picking flaws about them in the martingale setting. But firstly, what is the martingale setting? What is a martingale? Informally, a martingale is a special kind of stochastic process with the property that martingale randmo variables are linked to each other by means of assumptions about their conditional expectations. At each time, the conditional expectation of the next random variable in the sequence is related to the current value of the sequence. Among other things, a martingale can model sequences of repeated games where the player's strategy may depend on the past (a common example is gambling). Other, more mathematical, applications of martingales include predictions, filtering, adaptive learning, decision making, and randomized algorithms.
+
+To formally describe a martingale, we need to talk about filtrations, adapted processes, and \(\sigma\)-algebras:
+
+<u>Definition 1 (\(\sigma\)-algebras)</u>: Given a set \(\Omega\), the sigma algebra (or \(\sigma\)-algebra) of \(\Omega\) is a collection of subsets of \(\Omega\) that are closed under complement, countable unions, and include the empty set \( \emptyset \). \(\sigma\)-algebras contain knowledge about the world - in a particular time, we can collect all the events that have been determined so far. Therefore, a small \(\sigma\)-algebra contains less information than a larger \(\sigma\)-algebra that contains it. This is the intuition that allows us to develop the formalization necessary to understand martingales.
+
+<u>Definition 2 (filtrations)</u>: Fix a probability space \((\Omega, \mathcal{F}, \mathbb{P})\). A discrete time filtration is an increasing sequence of \(\sigma\)-algebras on \(\Omega\):
+
+$$ \mathcal{F}_0 \subseteq \mathcal{F}_1 \subseteq \mathcal{F}_2 \subseteq \dots \subseteq \mathcal{F}_\infty \subseteq \mathcal{F}$$
+
+The fact that the \(\sigma\)-algebras are increasing reflects the accrual of knowledge over time (assuming that memory is never lost in this system). These filtrations can then be used to model random processes that have a fixed horizon. More generally, filtrations can arise from a sequence of events or from a sequence of random variables.
+
+<u>Definition 3 (filtrations from a sequence of events)</u>: Given any sequence \(E_i:i\in\mathbb{N}\) of events belonging to the master \(\sigma\)-algebra \(\mathcal{F}\), we can define the \(\sigma\)-algebras for all \(k\in\mathbb{N}\):
+
+$$ \mathcal{F}_k := \sigma(E_1, \dots, E_k)$$
+
+Here, \(\mathcal{F}_0:=\{\emptyset, \Omega\}\) and \(\mathcal{F}_\infty := \sigma(\cup_{k=1}^\infty \mathcal{F}_k)\). Then, \((\mathcal{F}_k: k\in\mathbb{Z}_+)\) is a filtration. This filtration can be used to model a sequence of simple and not necessarily independent experiments where \(E_i\) is the event that the \(i\)th experiment succeeds. At time \(k\), we know the outcomes of the first \(k\) experiments.
+
+<u>Definition 3 (filtrations from random variables)</u>: Given any sequence \(Z_i:i\in\mathbb{Z}\) of real random variables on \(\Omega\) that are \(\mathcal{F}\)-measurable, define the \(\sigma\) algebras for \(k\in\mathbb{Z}_+\):
+
+$$ \mathcal{F}_k := \sigma(Z_0, \dots, Z_k)$$
+
+Here, \(\mathcal{F}_\infty := \sigma(\cup_{k=1}^\infty \mathcal{F}_k)\). Then, \((\mathcal{F}_k: k\in\mathbb{Z}_+)\) is a filtration. This filtration models a sequence \(Z_0, Z_1, Z_2, \dots\) of numerical observations (not necessarily independent), although there is no need for the measurements to be alike or independent from each other. At time \(k\), we know the outcomes of the first \(k\) experiments.
+
+
+<u>Definition 4 (adapted process)</u>: Fix a probability space \(\Omega, \mathcal{F},\mathbb{P}\) and a filtration \((\mathcal{F}_k: k\in\mathbb{Z}_+)\). We say that a sequence \((X_k: k\in\mathbb{Z}_+)\) of real random variables is adapted to the filtration if \(X_k\) is \(\mathcal{F}_k\)-measurable for each index \(k\in\mathbb{Z}_+\). In other words, the \(k\)th random variable \(X_k\) in the adapted sequence is completely determined by the information we have available at time \(k\). An adapted process provides a very flexible model for describing random outcomes that evolve with time in a causal fashion (the future does not influence the past).
+
+Now, we are truly ready to define a Martingale:
+
+
+<u>Definition 5 (martingales)</u>: Martingales are adapted processes that are based on a single assumption about how the random variables evolve. Although the state of an adapted process is determined at time \(k\), the future values of the process remain random. A martingale is a random process that is indifferent about the future. Specifically, fix a probability sequence (\(\Omega, \mathcal{F}, \mathbb{P}\)) a filtration \((\mathcal{F}_k: k\in\mathbb{Z}_+)\). Then, a sequence \(X_k:k\in\mathbb{Z}\) of real random variables is called a (discrete-time) martingale with respect to the filtration when it satisfies three properties: ** adaptivity** , ** integrability** , and ** status-quo** .
+
+Adaptivity is when \((X_k)\) is adapted to the filtration for each \(k\in\mathbb{Z}_+\). Integrability is when \(\mathbb{E}[|X_k|] < \infty\) for each \(k\in\mathbb{Z}_+\). Status-Quo is when \(\EE[X_{k+1}|\mathcal{F}_k] = X_k\) almost surely for each \(k\in\mathbb{Z}_+\). In particular, for a martingale sequence, \(\EE[X_n] = \EE[X_0]\) for any \(n\in\mathbb{Z}_+\).
+
+So, now that we've defined this special martingale setting, how does it tie in to concentration inequalities? I promised to find flaws about these concentration inequalities for martingales. So, here we are: the primary criticism about the classical concentration inequalities are that they are ** too**  weak to describe the behavior of martingales. Martingales have a variety of applications, from finance to theoretical computer science to gambling. Usually, stakeholders in these applications like to see strong provable guarantees - unfortunately, the concentration inequalities for martingales are simply too lose to describe their sure trajectories. 
+
+A remarkable feature of the martingale setting is that we can establish stronger results than we were able to achieve for independent sums. In particular, we can show that the entire trajectory of the martingale (up to a fixed time) is unlikely to deviate from its expectation. As a consequence, we can even enhance our results for independent sums.
+This type of result is called a maximal inequality, because it controls the maximum value of the martingale over a portion of its trajectory. 
+
+To cover more scope of the possibilities with this kind of math, I'm going to go ahead and further define two (variant) classes of martingales: submartingales and supermartingales.
+
+<u>Definition 6 (submartingales)</u>: We say that the sequence \((X_k: k\in\mathbb{Z}_+)\) is a submartingale if it satisfies adaptivity and integrability. Additionally, it must also satisfy the property of increasing expectations: \(\EE[[X_{k+1} | \mathcal{F}_k] geq X_k\) almost surely for each \(k\in\mathbb{Z}_+\).
+
+<u>Definition 7 (supermartingales)</u>: We say that the sequence \((X_k: k\in\mathbb{Z}_+)\) is a supermartingale if it satisfies adaptivity and integrability. Additionally, it must also satisfy the property of decreasing expectations: \(\EE[[X_{k+1} | \mathcal{F}_k] \leq X_k\) almost surely for each \(k\in\mathbb{Z}_+\).
+
+The decreasing expectation property in supermartingales reflects a pessimistic view of the world. On average, tomorrow is worse than today. A supermartingale can be used to model a player’s total winnings in a game that is unfair to him (e.g., casino games from the player’s point of view). On the other hand, the increasing expectation in submartingales reflects an optimistic view of the world. On average, tomorrow is better than today. A submartingale can be used to model a player’s total winnings in a game that is unfair to her opponent (e.g., casino games from the casino’s point of view).
+
+
+## ** Doob's Maximal Inequality versus Markov's Inequality**
+
+Consider a positive submartingale \((X_k: k\in\mathbb{Z}_+)\). For each index \(N\in\mathbb{Z}_+\), 
+
+$$ \boxed{\mathbb{P}\left\{\sup_{0\leq k\leq N}X_k>t\right\}\leq \frac{\EE[X_n]}{t}}$$
+
+Before I prove it, let's quickly compare it to Markov's Inequality for \(\sup_{k\leq N}X_k\). Markov's Inequality says that
+
+$$ \mathbb{P}\left\{\sup_{k\leq N}X_k>t\right\}\leq \frac{\EE[\sup_{k\leq N}X_k]}{t}$$
+
+Now, the left-hand side of the Markov bound matches the left-hand side of Doob's inequality, but the right-hand side involves the expected supremum which is not quite strong and harder to compute. For submartingale processes, Doob’s inequality asserts that we can do better. Since the random variables in a submartingale are linked, we can control the entire trajectory (up to time \(N\)) by means of the expectation \(\EE[X_N]\) of the submartingale at the end of the time horizon.
+
+To prove Doob's inequality, we define the following extended random variable
+
+$$ \tau := \inf\{k\leq N: X_k>t\} \in \mathbb{Z}_+ $$
+
+In other words, \(\tau\) is the first index \(k\) where the submartingale \(X_k\) surpasses the level \(t\). If this event does not occur by the fixed time \(N\), then we set \(\tau=\infty\). Then, consider the event that the submartingale surmounts the level \(t\) before time \(N\). That is,
+
+$$E := \{\sup_{k\leq N} X_k > t\}$$
+
+So, our task is to compute the probability of the excursion event \(E\). So,
+
+$$\EE[X_N] \geq \EE[X_{N\wedge \tau}] \geq \EE[X_{N\wedge \tau}\cdot {1}_E]$$
+
+This can be further bounded to
+
+$$ \EE[X_{N\wedge \tau}\cdot {1}_E] \geq \EE[X_{\tau}\cdot {1}_E] \geq \EE[\tau \cdot {1}_E]$$
+
+Since \(t\) is a constant, we can pull it out of the expectation to get \(\EE[1_E] = \Pr[E]\). So, we have that:
+
+$$\mathbb{P}\left\{\sup_{0\leq k\leq N}X_k>t\right\}\leq \frac{\EE[X_n]}{t}$$
+
+
+## ** Convex Tranformation of Martingales using Jensen's Inequality**
+
+For this section, we need to introduce Jensen's inequality for convex functions.
+
+<u>Definition 8 (convex functions):</u> The function \(f:X\to\mathbb{R}\), where \(X\) is a convex subset of a real vector space, is called convex if and only if, for all \(0\leq t\leq 1\) and \(x_1, x_2 \in X\): 
+
+$$ f(tx_1 + (1-t)x_2) \leq tf(x_1) + (1-t)f(x_2)$$
+
+<u>Definition 9 (Jensen's inequality):</u> if \(X\) is a random variable and \(\varphi\) is a convex function, then
+$$ \varphi(\EE[X]) \leq \EE[\varphi(X)]$$ 
+
+Then, using Jensen's inequality on martingales, we get that for any index \(k\in\mathbb{Z}_+\) that:
+
+$$ \boxed{\EE[\varphi(X_{k+1})|\mathcal{F}_k] \geq \varphi(\EE[X_{k+1}|\mathcal{F}_k]) = \varphi(X_k)}$$
+
+
+</div>
+
+## ** Kolmogorov's Maximal Inequality versus Chebyshev's Inequality**
+
+Recall Chebyshev's inequality which stated that
+
+$$\Pr(|X-\mu|\geq k) \leq \frac{\sigma^2}{k^2}$$
+
+Similarly, applying Doob's inequality gives a maximal inequality for squared deviations. 
+
+Consider a martingale sequence \((X_k: k\in\mathbb{Z}_+)\) in \(L_2\). So, for each index \(N\in \mathbb{Z}_+\), the Kolmogorov maximal inequality yields that for all \(t>0\):
+
+$$\boxed{\mathbb{P}\left\{\max_{k\leq N}(X_k - \EE[X_k])^2 > t\right\} \leq \frac{\text{Var}[X_N]}{t^2}}$$
+
+
+## ** The Exponential Maximal Inequality versus the Laplace Transform Method**
+
+
+Recall the Laplace transform which states that for any \(t\in\mathbb{R}\):
+
+$$\Pr[X\geq t] \leq \exp(-\sup_{\theta>0} (\theta t - \xi_X(\theta)))$$
+
+$$\Pr[X\leq t] \leq \exp(-\sup_{\theta<0} (\theta t - \xi_X(\theta)))$$
+
+Let \((X_k : k\in\mathbb{Z}_+)\) in \(L_\infty\) be a bounded submartingale sequence. For each index \(N\in\mathbb{Z}_+\), the exponential maximal inequality states that:
+
+$$ \boxed{\mathbb{P}\left\{\max_{k\leq N} X_k > t\right\} \leq \exp\left(−\sup_{\theta>0}(\theta t − \xi_{X_N}(\theta))\right)}$$
+
+As usual, \(\xi_X(\theta):=\log \EE[e^{\theta X}]\) denotes the cumulant generating function.
+
+The proof for this relies on Doob's inequality. Let \(\theta>0\). Then, since the exponential function mapping \(x\mapsto e^{\theta x}\) is convex and strictly increasing, we have that:
+
+$$ \mathbb{P}\left\{\max_{k\leq N} X_k > t\right\} = \mathbb{P}\left\{\max_{k\leq N} e^{\theta X_k} > e^{\theta t}\right\} \leq e^{-\theta t}\EE[e^{\theta X_N}]$$
+
+Then, converting this to CFG form, we get the exponential maximal inequality, that:
+
+$$\mathbb{P}\left\{\max_{k\leq N} X_k > t\right\} \leq \exp\left(−\sup_{\theta>0}(\theta t − \xi_{X_N}(\theta))\right)$$
+
+
+## ** The Hoeffding-Azuma Maximal Inequality versus the Hoeffding Inequality**
+
+As a particular example of the exponential maximal inequality, we now derive a very useful concentration inequality for submartingales with bounded increments.
+
+Let \(X_1, \dots, X_n\) be independent random variables such that \(a_i\leq X_i\leq b_i\) almost surely. Consider the sum of these random variables: \(S_n = X_1 + \dots + X_n\). Recall then, that Hoeffding's theorem states that, for all \(t>0\),
+
+$$\Pr(S_n - \EE[S_n] \geq t) \leq \exp\left(-\frac{2t^2}{\sum_{i=1}^n (b_i - a_i)^2}\right)$$
+
+$$\Pr(|S_n - \EE[S_n]| \geq t) \leq 2\exp\left(-\frac{2t^2}{\sum_{i=1}^n (b_i - a_i)^2}\right)$$
+
+Now, instead consider a martingale sequence \((X_k: k\in\mathbb{Z}_+)\) whose difference sequence is bounded in the sense that for \(k\in\mathbb{N}\), we have that:
+
+$$ |\Delta_k| := |X_k - X_{k-1}| \leq a_k$$
+
+Then, for all \(t>0\), the Hoeffding–Azuma maximal inequality states that:
+
+$$ \boxed{\mathbb{P}\left\{\max_{k\leq N} |X_k - X_0| > t\right\} \leq 2e^{-t^2/2v_N} }$$
+
+Here, \(v_N = \sum_{k=1}^N a_k^2\).
+
+To prove the Hoeffding–Azuma maximal inequality, we first need to prove the Hoeffding–Azuma lemma, which states that
+
+$$ \xi_{X_N - X_0}(\theta) \leq \theta^2 v_N / 2$$
+
+We need to express \(X_N - X_0\) as a telescoping sum of the difference sequence:
+
+$$ m(\theta) := \EE[e^{\theta (X_N - X_0)}] = \EE[e^{\theta \Delta_{N}} e^{\theta \Delta_{N-1}}\cdot e^{\theta \Delta_1}]$$
+
+To bound the expectation, we repeatedly condition using the tower rule:
+
+$$
+\begin{align*}
+m(\theta) &= \EE[\EE[e^{\theta \Delta_N} | \mathcal{F}_{N-1}]\cdots e^{\theta \Delta_{N-1}}\cdots e^{\theta \Delta_1}] \\
+&\leq e^{\theta^2 a^2_N/2} \cdot \EE[e^{\theta \Delta_{N-2}}\cdots e^{\theta \Delta_1}] \\
+&\leq e^{\theta^2(a_N^2 + a_{N-1}^2 + \cdots a_1^2)/2} \\
+&= e^{\theta^2 v_N^2 / 2}
+\end{align*}
+$$
+
+The first step follows from the pull-through rule and the fact that \(X_0, \dots, X_{N-1}\) are all bounded and \(\mathcal{F}_{N-1}\)-measurable. At each step \(k=N,\dots, 1\), we have invoked the Hoeffding CGF bound, conditional on \(\mathcal{F}_{k-1}\). This action is legal because \(\EE[\Delta_k|\mathcal{F}_{k-1}] = 0\) by the martingale property and \(|\Delta k| \leq a_k\) by assumption. Finally, taking the logarithm to complete the proof.
+
+We now have all the machinery needed to complete the proof of the Hoeffding–Azuma maximal inequality. So, note that the Hoeffding–Azuma lemma and the exponential maximal inequality yields that:
+
+$$ \mathbb{P}\left\{\max_{k\leq N} X_k>t\right\} =\mathbb{P}\left\{\max_{k\leq N} e^{\theta X_k} > e^{\theta t}\right\} \leq e^{-\theta t} \cdot \EE[e^{\theta X_N}]$$
+
+Then, writing the inequality using the cumulant generating function and then optimizing over all possible \(\theta>0\) yields the Hoeffding-Azuma maximal inequality, that:
+
+$$\mathbb{P}\left\{\max_{k\leq N} |X_k - X_0| > t\right\} \leq 2e^{-t^2/2v_N} $$
+
+where \(v_N = \sum_{k=1}^N a_k^2\).
+
+
+## ** Ville's Maximal Inequality for supermartingales versus Markov's Inequality**
+
+Fix a probability space and a filtration. Consider a positive supermartingale \((X_k: k\in\mathbb{Z}_+)\). Then for all \(t>0\), we have:
+
+$$ \boxed{\mathbb{P}\left\{\sup_{k\geq 0} X_k > t\right\}\leq\frac{\EE[X_0]}{t}}$$
+
+We emphasize that Ville’s maximal inequality controls the entire infinite trajectory of the supermartingale in terms of its initial value \(\EE[X_0]\).
+
+So that's it! Martingales are pretty cool, they yield some ** STRONG**  concentration inequalities!
